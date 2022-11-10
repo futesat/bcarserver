@@ -1,0 +1,17 @@
+[Unit]
+Description=Boskicar Server
+After=syslog.target
+
+[Service]
+Environment="JAVA_HOME=/home/futesat/.sdkman/candidates/java/current"
+Environment="JAVA_OPTS=-Xmx64m -Xss256k -Dpi4j.linking=dynamic"
+Environment="LOG_FOLDER=/var/log/boskicar"
+
+User=root
+ExecStart=/usr/local/bin/bcarserver.jar 
+SuccessExitStatus=143
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
