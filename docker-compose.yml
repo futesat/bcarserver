@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  bcarserver:
+    build: .
+    container_name: bcarserver
+    ports:
+      - "3333:3333"
+    environment:
+      - SERVER_PORT=3333
+    # Uncomment for Raspberry Pi with GPIO access
+    # privileged: true
+    # devices:
+    #   - /dev/gpiomem:/dev/gpiomem
+    #   - /dev/i2c-1:/dev/i2c-1
+    #   - /dev/pi-blaster:/dev/pi-blaster
+    volumes:
+      - ./logs:/var/log/boskicar
+    restart: unless-stopped
+    networks:
+      - bcarserver-network
+
+networks:
+  bcarserver-network:
+    driver: bridge

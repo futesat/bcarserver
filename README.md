@@ -1,80 +1,130 @@
-1) Install Raspian with Raspberry Pi Imager 
+# Bcarserver
 
-2) JAVA install (With sdkman)
+[![Java CI with Maven](https://github.com/futesat/bcarserver/actions/workflows/ci.yml/badge.svg)](https://github.com/futesat/bcarserver/actions/workflows/ci.yml)
+[![Docker Build and Push](https://github.com/futesat/bcarserver/actions/workflows/docker.yml/badge.svg)](https://github.com/futesat/bcarserver/actions/workflows/docker.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Java Version](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/projects/jdk/21/)
 
-curl -s "https://get.sdkman.io" | bash
-source "$HOME/.sdkman/bin/sdkman-init.sh"
-sdk install java 11.0.16-zulu
+Boskicar Server - A Spring Boot application for controlling a Raspberry Pi-based car with GPIO controls.
 
-3) Configura raspberry as Access Point
+## Features
 
- sudo apt-get install iptables
- 
-git clone https://github.com/idev1/rpihotspot.git
+- RESTful API for car control (forward, backward, steering)
+- Joystick and throttle control
+- GPIO integration with Raspberry Pi (lights, fans, motors)
+- PWM control via pi-blaster
+- Steering wheel calibration
+- UDP message handling
+- System control (shutdown, reboot, deploy)
 
-cd rpihotspot
+## Requirements
 
-sudo chmod +x setup-network.sh
+- Java 21
+- Maven 3.9+
+- Docker (optional, for containerized deployment)
+- Raspberry Pi with GPIO support (for hardware features)
 
-sudo ./setup-network.sh --install --ap-ssid="BOSKICAR" --ap-password="<SET YOUR PASSWORD HERE>" --ap-password-encrypt --ap-country-code="ES" --ap-ip-address="192.168.0.1" --wifi-interface="wlan0"
+## Building
 
-4) Install pi-blaster
+### Using Maven
 
-git clone https://github.com/sarfata/pi-blaster.git
-sudo apt-get install autoconf
-./autogen.sh 
-./configure
-sudo make install
+```bash
+mvn clean package
+```
 
-Create cfg file: /etc/default/pi-blaster with the content:
+### Using Docker
 
-DAEMON_OPTS="--gpio 13,14,24,26"
+```bash
+docker build -t bcarserver .
+```
 
-5) Install pi4j & wiringpi
+## Running
 
-curl -sSL https://pi4j.com/install | sudo bash
-sudo pi4j --wiringpi
+### Locally
 
-6) Compile JAR & copy bcarserver JAR:
-Copiar en ruta: /usr/local/bin/bcarserver-1.0.1-RELEASE.jar
+```bash
+java -jar target/bcarserver-1.2.0-RELEASE.jar
+```
 
-7) Create systemd service -> /etc/systemd/system/boskicar.service
+### With Docker
 
-sudo systemctl daemon-reload 
-sudo systemctl enable
-sudo service boskicar start
+```bash
+docker run -p 3333:3333 \
+  -e SERVER_PORT=3333 \
+  --privileged \
+  bcarserver
+```
 
-8) Check application logs
+**Note:** The `--privileged` flag is required for GPIO access on Raspberry Pi.
 
-sudo journalctl --unit=boskicar -n 50 --no-pager
+## Configuration
 
-9) Check application API: 
+Environment variables:
 
-curl -v -H 'Content-Type: application/json' http://192.168.0.1:3333/status
+- `SERVER_PORT`: Server port (default: 3333)
 
-curl -v -X POST -H 'Content-Type: application/json' http://192.168.0.1:3333/mobilecontrol/ON
+## API Endpoints
 
-curl -v -X POST -H 'Content-Type: application/json' http://192.168.0.1:3333/shutdown
+### Movement Control
 
-10) Raspberry cleanning (headless)
+- `POST /forward/{speed}` - Move forward (speed: 0-100)
+- `POST /backward/{speed}` - Move backward (speed: 0-100)
+- `POST /stop` - Stop all movement
+- `POST /joystick/{angle}/{strength}` - Joystick control (angle: 0-360, strength: 0-100)
+- `POST /throttle/{fbOrderSpeed}/{lrStrength}` - Throttle control
+- `POST /steeringwheel/{angle}` - Set steering wheel angle (0-180)
 
-wget "https://raw.githubusercontent.com/dumbo25/unsed_rpi/main/unused_rpi.sh"
-sudo chmod +x unused_rpi.sh
-sudo bash unused_rpi.sh
-sudo apt remove --purge cups
-sudo apt remove --purge pulseaudio
-udo apt-get purge bluez -y
-sudo apt autoremove
-sudo apt clean
-sudo reboot
+### System Control
 
-11) RO FileSystem
+- `POST /lights/{status}` - Control lights (ON/OFF)
+- `POST /fans/{status}` - Control fans (ON/OFF)
+- `POST /mobilecontrol/{status}` - Enable/disable mobile control (ON/OFF)
+- `POST /enginecontrol/{status}` - Enable/disable engine control (ON/OFF)
+- `POST /steeringwheelcontrol/{status}` - Enable/disable steering wheel control (ON/OFF)
+- `POST /throttlecontrol/{status}` - Enable/disable throttle control (ON/OFF)
 
-sudo raspi-config
+### Status & Maintenance
 
-Performance Options > Overlay File System 
+- `GET /status/{complete}` - Get system status (complete: true/false)
+- `GET /logs` - Retrieve application logs
+- `POST /calibrate/steeringwheel` - Calibrate steering wheel
+- `POST /shutdown` - Shutdown system
+- `POST /reboot` - Reboot system
+- `POST /deploy` - Deploy new JAR file
 
-12) Backup & Restore
+## Testing
 
-sudo dd if=/dev/disk2 of=boskicarOS.dmg
-sudo dd if=boskicarOS.dmg of=/dev/disk2
+Run tests with:
+
+```bash
+mvn test
+```
+
+Tests include:
+- Context loading verification
+- API endpoint integration tests
+- GPIO null-safety checks (for non-hardware environments)
+
+## Hardware Setup
+
+This application is designed to run on a Raspberry Pi with:
+- GPIO pins for relay control
+- ADS1015 ADC for analog input (steering wheel position sensor)
+- pi-blaster for PWM control
+- I2C bus for sensor communication
+
+## Development
+
+The application uses:
+- Spring Boot 2.7.18
+- Spring Integration for UDP messaging
+- Pi4J for GPIO control
+- Scheduled tasks for order processing (150ms intervals)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Service Installation
+
+For systemd service installation on Raspberry Pi, see `scripts/boskicar.service`.
