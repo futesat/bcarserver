@@ -3,7 +3,7 @@ Description=Boskicar Server
 After=syslog.target
 
 [Service]
-Environment="JAVA_HOME=/home/futesat/.sdkman/candidates/java/current"
+Environment="JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"
 Environment="JAVA_OPTS=-Xmx64m -Xss256k -Dpi4j.linking=dynamic"
 Environment="LOG_FOLDER=/var/log/boskicar"
 
