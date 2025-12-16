@@ -128,3 +128,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Service Installation
 
 For systemd service installation on Raspberry Pi, see `scripts/boskicar.service`.
+
+## Photos
+
+[Boskicar working tests :)](boskicar.jpg).
+
