@@ -131,5 +131,5 @@ For systemd service installation on Raspberry Pi, see `scripts/boskicar.service`
 
 ## Photos
 
-[Boskicar working tests :)](boskicar.jpg).
+[Boskicar first test :)](boskicar.jpg).
 
